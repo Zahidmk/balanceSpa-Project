@@ -388,7 +388,18 @@ const PDFPreviewPage = () => {
               </div>
 
 
-                     {/* Notes */}
+              {/* Treatment Policy */}
+              <div className="p-3 print:p-2 rounded print:rounded-none bg-gray-50 border border-gray-200 mt-2 mb-2 text-xs text-gray-700">
+                <h3 className="font-bold text-gray-900 mb-1 border-b border-gray-300 pb-1">Treatment Policy</h3>
+                <p className="mb-2 italic text-[11px]">To ensure a safe, comfortable, and professional experience for all our guests, we kindly ask you to observe the following spa policies:</p>
+                <ul className="space-y-1 text-[11px] list-disc pl-4">
+                  <li><strong>Professional Boundaries:</strong> Our therapists provide professional wellness treatments only. Massage or other treatments involving private or intimate areas are strictly not permitted.</li>
+                  <li><strong>Treatment Cancellation:</strong> If you wish to cancel or discontinue your treatment, please inform our therapist or reception team within the first 15 minutes of the treatment.</li>
+                  <li><strong>No Refund After Halfway Point:</strong> If more than 50% of the scheduled treatment time has already been completed, we regret that we are unable to provide a refund.</li>
+                </ul>
+              </div>
+
+              {/* Notes */}
               <div className="p-3 print:p-2 rounded print:rounded-none">
                 <h2 className="text-[13px] print:text-base font-semibold text-gray-800">Notes: <span> Sexual behavior is prohibited by law and will not be tolerated by the management and the Authority.</span>  </h2>         
               </div>

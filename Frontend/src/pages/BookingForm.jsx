@@ -1179,6 +1179,63 @@ const handleClearSignature = () => {
                   />
                 </div>
 
+                {/* Treatment Policy */}
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 mb-5 shadow-lg">
+                  <h3 className="text-lg font-bold text-white mb-3 border-b border-zinc-800 pb-2">
+                    {selectedLanguage === 'ar' ? 'سياسة العلاج' : 'Treatment Policy'}
+                  </h3>
+                  
+                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed mb-4">
+                    {selectedLanguage === 'ar' 
+                      ? 'لضمان تجربة آمنة ومريحة ومهنية لجميع ضيوفنا، يرجى التكرم بالالتزام بسياسات السبا التالية:'
+                      : 'To ensure a safe, comfortable, and professional experience for all our guests, we kindly ask you to observe the following spa policies:'}
+                  </p>
+
+                  <div className="space-y-3 text-xs sm:text-sm text-gray-300 mb-4">
+                    <div className="flex items-start gap-2.5 bg-zinc-800/60 p-3 rounded border border-zinc-700/60">
+                      <span className="text-blue-400 font-bold">•</span>
+                      <div>
+                        <strong className="text-white font-semibold">
+                          {selectedLanguage === 'ar' ? 'الحدود المهنية: ' : 'Professional Boundaries: '}
+                        </strong>
+                        {selectedLanguage === 'ar'
+                          ? 'يقدم معالجونا علاجات صحية مهنية فقط. التدليك أو العلاجات الأخرى التي تشمل المناطق الخاصة أو الحساسة غير مسموح بها بتاتاً.'
+                          : 'Our therapists provide professional wellness treatments only. Massage or other treatments involving private or intimate areas are strictly not permitted.'}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5 bg-zinc-800/60 p-3 rounded border border-zinc-700/60">
+                      <span className="text-blue-400 font-bold">•</span>
+                      <div>
+                        <strong className="text-white font-semibold">
+                          {selectedLanguage === 'ar' ? 'إلغاء العلاج: ' : 'Treatment Cancellation: '}
+                        </strong>
+                        {selectedLanguage === 'ar'
+                          ? 'إذا كنت ترغب في إلغاء العلاج أو التوقف عنه، يرجى إبلاغ المعالج أو فريق الاستقبال خلال أول 15 دقيقة من بدء الجلسة.'
+                          : 'If you wish to cancel or discontinue your treatment, please inform our therapist or reception team within the first 15 minutes of the treatment.'}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5 bg-zinc-800/60 p-3 rounded border border-zinc-700/60">
+                      <span className="text-blue-400 font-bold">•</span>
+                      <div>
+                        <strong className="text-white font-semibold">
+                          {selectedLanguage === 'ar' ? 'عدم استرداد المبلغ بعد انتصاف الوقت: ' : 'No Refund After Halfway Point: '}
+                        </strong>
+                        {selectedLanguage === 'ar'
+                          ? 'إذا تم إنجاز أكثر من 50% من وقت العلاج المحدد، نعتذر عن عدم إمكانية استرداد المبلغ المدفوع.'
+                          : 'If more than 50% of the scheduled treatment time has already been completed, we regret that we are unable to provide a refund.'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-400 italic leading-relaxed">
+                    {selectedLanguage === 'ar'
+                      ? 'نقدر تفهمكم وتعاونكم في مساعدتنا على الحفاظ على بيئة محترمة وآمنة ومريحة للجميع. شكراً لاختياركم منتجعنا الصحي، ونتطلع إلى تقديم تجربة ممتعة ومريحة لكم.'
+                      : 'We appreciate your understanding and cooperation in helping us maintain a respectful, safe, and relaxing environment for everyone. Thank you for choosing our spa. We look forward to providing you with a pleasant and relaxing wellness experience.'}
+                  </p>
+                </div>
+
                 <div className="text-lg border border-zinc-700 p-3 mb-4 rounded bg-zinc-800">
                   <strong className="text-red-500">
                     {selectedLanguage === 'ar' ? 'ملاحظة:' : 'NOTE:'}
