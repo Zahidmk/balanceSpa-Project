@@ -8,6 +8,201 @@ import axiosInstance from '../api/axios'; // Correct import path for axiosInstan
 import { useRef } from 'react';
 import { generateAppointmentPDF } from '@utils/pdfGenerator';
 import axios from '../api/axios';
+import { getMediaUrl } from '../utils/media';
+
+// ─── Treatment Browser Modal ──────────────────────────────────────────────────
+function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreatments, selectedTreatments, onSelectTreatment, onRemoveTreatment, selectedDurations, onDurationSelect }) {
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [expandedTreatment, setExpandedTreatment] = useState(null);
+
+  useEffect(() => {
+    if (isOpen && categories.length > 0 && !activeCategory) {
+      setActiveCategory(String(categories[0].id));
+    }
+  }, [isOpen, categories, activeCategory]);
+
+  if (!isOpen) return null;
+
+  const visibleTreatments = activeCategory
+    ? allTreatments.filter(t => String(t.category_id) === activeCategory)
+    : allTreatments;
+
+  const handleSelect = (treatment) => {
+    const tid = String(treatment.id);
+    if (selectedTreatments.includes(tid)) {
+      onRemoveTreatment(tid);
+    } else {
+      onSelectTreatment(treatment);
+      setExpandedTreatment(tid);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-700 shrink-0">
+          <div>
+            <h2 className="text-xl font-bold text-white">
+              {language === 'ar' ? 'استكشف العلاجات' : 'Explore Treatments'}
+            </h2>
+            <p className="text-sm text-gray-400 mt-0.5">
+              {language === 'ar' ? 'اختر علاجاتك وأضفها إلى نموذج الحجز' : 'Browse and select treatments to add to your booking'}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-2xl font-light leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-700 transition"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Category Tabs */}
+        {categories.length > 0 && (
+          <div className="flex gap-2 px-6 py-3 overflow-x-auto border-b border-zinc-800 shrink-0">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition ${!activeCategory ? 'bg-white text-black' : 'bg-zinc-800 text-gray-300 hover:bg-zinc-700'}`}
+            >
+              {language === 'ar' ? 'الكل' : 'All'}
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(String(cat.id))}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition ${activeCategory === String(cat.id) ? 'bg-white text-black' : 'bg-zinc-800 text-gray-300 hover:bg-zinc-700'}`}
+              >
+                {language === 'ar' ? cat.name_ar : cat.name_en}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Treatments Grid */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {visibleTreatments.length === 0 ? (
+            <div className="text-center py-16 text-gray-500">
+              {language === 'ar' ? 'لا توجد علاجات متاحة' : 'No treatments available'}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {visibleTreatments.map(treatment => {
+                const tid = String(treatment.id);
+                const isSelected = selectedTreatments.includes(tid);
+                const isExpanded = expandedTreatment === tid;
+                const mediaSrc = getMediaUrl(treatment.media_url || treatment.image_url);
+                const isVideo = treatment.media_type === 'video' || (treatment.media_url && treatment.media_url.match(/\.(mp4|webm|mov)$/i));
+                const prices = Array.isArray(treatment.prices) ? treatment.prices : [];
+                const hasDuration = !!selectedDurations[tid];
+
+                return (
+                  <div
+                    key={treatment.id}
+                    className={`rounded-xl border overflow-hidden transition-all duration-200 ${isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/40' : 'border-zinc-700 hover:border-zinc-500'} bg-zinc-800`}
+                  >
+                    {/* Media */}
+                    <div className="relative">
+                      {isVideo ? (
+                        <video src={mediaSrc} className="w-full h-40 object-cover" controls />
+                      ) : mediaSrc && mediaSrc !== '/default-treatment.jpg' ? (
+                        <img src={mediaSrc} alt={treatment.name_en} className="w-full h-40 object-cover" onError={e => { e.target.style.display = 'none'; }} />
+                      ) : (
+                        <div className="w-full h-40 bg-zinc-700 flex items-center justify-center text-zinc-500 text-sm">
+                          {language === 'ar' ? 'سبا بالانس' : 'Balance Spa'}
+                        </div>
+                      )}
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 bg-emerald-600 rounded-full p-1 shadow">
+                          <svg width="14" height="14" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="p-4">
+                      <h3 className="font-bold text-white text-base mb-1">
+                        {language === 'ar' ? treatment.name_ar : treatment.name_en}
+                      </h3>
+                      <p className="text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2">
+                        {language === 'ar' ? treatment.description_ar : treatment.description_en}
+                      </p>
+
+                      {/* Price tags */}
+                      {prices.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {prices.map((p, i) => (
+                            <span key={i} className="text-xs bg-zinc-700 text-gray-300 px-2 py-0.5 rounded-full">
+                              {p.duration} — {p.price} {language === 'ar' ? 'ريال' : 'SAR'}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Duration selector (if selected & prices exist) */}
+                      {isSelected && prices.length > 0 && (
+                        <div className="mb-3">
+                          <div className="text-xs text-gray-400 mb-1.5">{language === 'ar' ? 'اختر المدة:' : 'Select duration:'}</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {prices.map((p, i) => {
+                              const isActiveDur = selectedDurations[tid]?.duration === p.duration;
+                              return (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={() => onDurationSelect(tid, p.duration, p.price)}
+                                  className={`text-xs px-3 py-1 rounded-lg font-medium transition ${isActiveDur ? 'bg-emerald-600 text-white' : 'bg-zinc-700 text-gray-300 hover:bg-zinc-600'}`}
+                                >
+                                  {p.duration} — {p.price} {language === 'ar' ? 'ريال' : 'SAR'}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Select / Deselect Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleSelect(treatment)}
+                        className={`w-full py-2 rounded-lg text-sm font-semibold transition ${isSelected ? 'bg-red-900/50 hover:bg-red-900/80 text-red-300 border border-red-700' : 'bg-white hover:bg-gray-100 text-black'}`}
+                      >
+                        {isSelected
+                          ? (language === 'ar' ? 'إزالة العلاج' : 'Remove Treatment')
+                          : (language === 'ar' ? 'إضافة إلى الحجز' : 'Add to Booking')}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-zinc-700 shrink-0 flex items-center justify-between bg-zinc-900/80">
+          <div className="text-sm text-gray-400">
+            {selectedTreatments.length > 0
+              ? `${selectedTreatments.length} ${language === 'ar' ? 'علاج مختار' : 'treatment(s) selected'}`
+              : (language === 'ar' ? 'لم يتم اختيار علاجات بعد' : 'No treatments selected yet')}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-white text-black px-6 py-2 rounded-full font-semibold text-sm hover:bg-gray-100 transition"
+          >
+            {language === 'ar' ? 'تم' : 'Done'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ...existing code...
 function SuccessModal({ onClose, language }) {
@@ -228,6 +423,15 @@ const [showTreatmentDropdown, setShowTreatmentDropdown] = useState(false);
 const [showFoodDropdown, setShowFoodDropdown] = useState(false);
 const [showProductDropdown, setShowProductDropdown] = useState(false);
 const [showFacilityDropdown, setShowFacilityDropdown] = useState(false);
+const [showTreatmentBrowser, setShowTreatmentBrowser] = useState(false);
+const [allTreatmentsList, setAllTreatmentsList] = useState([]);
+
+// Fetch all treatments for browser modal
+useEffect(() => {
+  axios.get('/api/treatments')
+    .then(res => setAllTreatmentsList(Array.isArray(res.data) ? res.data : []))
+    .catch(() => setAllTreatmentsList([]));
+}, []);
 
 
 
@@ -369,6 +573,49 @@ const [showFacilityDropdown, setShowFacilityDropdown] = useState(false);
     }));
   };
 
+  // Modal handlers: add treatment from browser
+  const handleModalSelectTreatment = (treatment) => {
+    const tid = String(treatment.id);
+    setFormData(prev => {
+      const alreadyHas = (prev.selectedTreatments || []).includes(tid);
+      if (alreadyHas) return prev;
+      // auto-pick first price/duration if available
+      const prices = Array.isArray(treatment.prices) ? treatment.prices : [];
+      const newDurations = { ...prev.selectedDurations };
+      if (prices.length > 0 && !newDurations[tid]) {
+        newDurations[tid] = { duration: prices[0].duration, price: prices[0].price };
+      }
+      // auto-add parent service if not present
+      let updatedServices = prev.selectedServices || [];
+      if (treatment.category_id) {
+        const catId = String(treatment.category_id);
+        if (!updatedServices.includes(catId)) {
+          updatedServices = [...updatedServices, catId];
+        }
+      }
+      return {
+        ...prev,
+        selectedTreatments: [...(prev.selectedTreatments || []), tid],
+        selectedDurations: newDurations,
+        selectedServices: updatedServices,
+      };
+    });
+  };
+
+  const handleModalRemoveTreatment = (tid) => {
+    setFormData(prev => {
+      const updatedTreatments = (prev.selectedTreatments || []).filter(id => String(id) !== String(tid));
+      const updatedDurations = { ...prev.selectedDurations };
+      delete updatedDurations[tid];
+      delete updatedDurations[String(tid)];
+      return {
+        ...prev,
+        selectedTreatments: updatedTreatments,
+        selectedDurations: updatedDurations,
+      };
+    });
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -504,13 +751,40 @@ const handleClearSignature = () => {
 
   return (
   <div className={`min-h-screen bg-black ${selectedLanguage === 'ar' ? 'rtl' : 'ltr'}`} dir={selectedLanguage === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Treatment Browser Modal */}
+      <TreatmentBrowserModal
+        isOpen={showTreatmentBrowser}
+        onClose={() => setShowTreatmentBrowser(false)}
+        language={selectedLanguage}
+        categories={categories}
+        allTreatments={allTreatmentsList}
+        selectedTreatments={formData.selectedTreatments || []}
+        selectedDurations={formData.selectedDurations || {}}
+        onSelectTreatment={handleModalSelectTreatment}
+        onRemoveTreatment={handleModalRemoveTreatment}
+        onDurationSelect={(tid, dur, price) => handleDurationSelect(tid, dur, price)}
+      />
+
       <div className="bg-black py-4 px-6 border-b border-zinc-800 re">
-        <h1 className="text-2xl font-bold text-center mb-2 text-white">
+        <h1 className="text-2xl font-bold text-center mb-1 text-white">
           {getTranslations(selectedLanguage).common.title}
         </h1>
-        <p className="text-sm text-gray-400 text-center">
+        <p className="text-sm text-gray-400 text-center mb-3">
           {getTranslations(selectedLanguage).common.subtitle}
         </p>
+        {/* Browse Treatments Button — right under the title */}
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowTreatmentBrowser(true)}
+            className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white text-sm font-medium px-5 py-2 rounded-full transition-all active:scale-95 shadow"
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+            </svg>
+            {selectedLanguage === 'ar' ? 'استكشف العلاجات' : 'Browse Treatments'}
+          </button>
+        </div>
               {/* Back Button */}
       <div className={`absolute top-8 ${selectedLanguage === 'ar' ? 'right-8' : 'left-8'}`}>
         <button
@@ -667,7 +941,19 @@ const handleClearSignature = () => {
 
                   {/* Treatments Selection Section */}
                   <div className="mb-2">
-                    <h2 className="font-bold text-white text-lg mb-2 tracking-wide">{selectedLanguage === 'ar' ? 'العلاجات' : 'Treatments'}</h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="font-bold text-white text-lg tracking-wide">{selectedLanguage === 'ar' ? 'العلاجات' : 'Treatments'}</h2>
+                      <button
+                        type="button"
+                        onClick={() => setShowTreatmentBrowser(true)}
+                        className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition"
+                      >
+                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+                        </svg>
+                        {selectedLanguage === 'ar' ? 'تصفح العلاجات' : 'Browse'}
+                      </button>
+                    </div>
                     
                     {/* Show selected treatments or dropdown */}
                     {formData.selectedTreatments && formData.selectedTreatments.length > 0 ? (
