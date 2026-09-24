@@ -21,8 +21,12 @@ const Facility = () => {
   const treatments = params.get("treatments");
   const durations = params.get("durations");
   const products = params.get("products");
+  const facilitiesParam = params.get("facilities");
 
   const [facilities, setFacilities] = useState([]);
+  const [selectedFacilities, setSelectedFacilities] = useState(
+    facilitiesParam ? facilitiesParam.split(",").filter(Boolean) : []
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,12 +43,20 @@ const Facility = () => {
     fetchFacilities();
   }, []);
 
+  const toggleFacility = (id) => {
+    const idStr = String(id);
+    setSelectedFacilities((prev) =>
+      prev.includes(idStr) ? prev.filter((item) => item !== idStr) : [...prev, idStr]
+    );
+  };
+
   const goToFood = () => {
     const query = new URLSearchParams({ lang });
     if (services) query.set("services", services);
     if (treatments) query.set("treatments", treatments);
     if (durations) query.set("durations", durations);
     if (products) query.set("products", products);
+    if (selectedFacilities.length > 0) query.set("facilities", selectedFacilities.join(","));
     navigate(`/food-beverages?${query.toString()}`);
   };
 
@@ -140,50 +152,99 @@ const Facility = () => {
                 </h2>
 
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {facilities.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl hover:border-zinc-700 transition-all duration-300 flex flex-col"
-                    >
-                      {/* Image / Media */}
-                      {item.image_url ? (
-                        <div className="w-full h-56 overflow-hidden bg-zinc-800">
-                          <img
-                            src={getMediaUrl(item.image_url)}
-                            alt={lang === "ar" ? item.name_ar || item.name : item.name}
-                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-44 bg-zinc-800 flex items-center justify-center text-zinc-500 text-sm">
-                          {lang === "ar" ? "سبا بالانس" : "Balance Spa Facility"}
-                        </div>
-                      )}
-
-                      {/* Details */}
-                      <div className="p-6 flex-1 flex flex-col justify-between">
-                        <div>
-                          <div className="flex justify-between items-start gap-4 mb-2">
-                            <h3 className="text-xl font-bold text-white">
-                              {lang === "ar" ? item.name_ar || item.name : item.name}
-                            </h3>
-                            {item.price !== null && item.price !== undefined && (
-                              <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-sm font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                                {Number(item.price).toFixed(2)}{" "}
-                                {lang === "ar" ? "ريال" : "SAR"}
-                              </span>
+                  {facilities.map((item) => {
+                    const isSelected = selectedFacilities.includes(String(item.id));
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => toggleFacility(item.id)}
+                        className={`bg-zinc-900 border rounded-2xl overflow-hidden shadow-xl transition-all duration-300 flex flex-col cursor-pointer ${
+                          isSelected
+                            ? "border-emerald-500 ring-2 ring-emerald-500/50"
+                            : "border-zinc-800 hover:border-zinc-700"
+                        }`}
+                      >
+                        {/* Image / Media */}
+                        {item.image_url ? (
+                          <div className="w-full h-56 overflow-hidden bg-zinc-800 relative">
+                            <img
+                              src={getMediaUrl(item.image_url)}
+                              alt={lang === "ar" ? item.name_ar || item.name : item.name}
+                              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                            />
+                            {isSelected && (
+                              <div className="absolute top-3 right-3 bg-emerald-600 text-white rounded-full p-1.5 shadow-lg">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
                             )}
                           </div>
+                        ) : (
+                          <div className="w-full h-44 bg-zinc-800 flex items-center justify-center text-zinc-500 text-sm relative">
+                            {lang === "ar" ? "سبا بالانس" : "Balance Spa Facility"}
+                            {isSelected && (
+                              <div className="absolute top-3 right-3 bg-emerald-600 text-white rounded-full p-1.5 shadow-lg">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                          <p className="text-gray-300 text-sm leading-relaxed mt-2">
-                            {lang === "ar"
-                              ? item.description_ar || item.description
-                              : item.description}
-                          </p>
+                        {/* Details */}
+                        <div className="p-6 flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="flex justify-between items-start gap-4 mb-2">
+                              <h3 className="text-xl font-bold text-white">
+                                {lang === "ar" ? item.name_ar || item.name : item.name}
+                              </h3>
+                              {item.price !== null && item.price !== undefined && Number(item.price) > 0 && (
+                                <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-sm font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                                  {Number(item.price).toFixed(2)}{" "}
+                                  {lang === "ar" ? "ريال" : "SAR"}
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-gray-300 text-sm leading-relaxed mt-2">
+                              {lang === "ar"
+                                ? item.description_ar || item.description
+                                : item.description}
+                            </p>
+                          </div>
+
+                          {/* Select Button */}
+                          <div className="mt-5 pt-4 border-t border-zinc-800/80">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFacility(item.id);
+                              }}
+                              className={`w-full py-2.5 px-4 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+                                isSelected
+                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/30"
+                                  : "bg-white hover:bg-zinc-200 text-black font-semibold"
+                              }`}
+                            >
+                              {isSelected ? (
+                                <>
+                                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  <span>{lang === "ar" ? "تم الاختيار" : "Selected"}</span>
+                                </>
+                              ) : (
+                                <span>{lang === "ar" ? "اختيار المرفق" : "Select Facility"}</span>
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Continue button directly below the cards */}

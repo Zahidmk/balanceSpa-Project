@@ -51,12 +51,14 @@ const BookingForm = () => {
     const selectedTreatmentQS = params.get('treatment') || params.get('treatments');
     const selectedFoodsQS = params.get('food');
     const selectedProductsQS = params.get('products');
+    const selectedFacilitiesQS = params.get('facilities') || params.get('facility');
     const selectedDurationsQS = params.get('durations');
     const selectedLanguageQS = params.get('lang');
     const selectedLanguage = selectedLanguageQS || location.state?.language || 'en';
     const translations = getTranslations(selectedLanguage).booking;
     const selectedFoodsArr = selectedFoodsQS ? selectedFoodsQS.split(',').map(f => f.trim()).filter(Boolean) : [];
     const selectedProductsArr = selectedProductsQS ? selectedProductsQS.split(',').map(p => p.trim()).filter(Boolean) : [];
+    const selectedFacilitiesArr = selectedFacilitiesQS ? selectedFacilitiesQS.split(',').map(f => f.trim()).filter(Boolean) : [];
     
     // Parse durations data - format: treatmentId:duration:price,treatmentId:duration:price
     const selectedDurationsData = selectedDurationsQS ? 
@@ -72,6 +74,7 @@ const BookingForm = () => {
   const selectedTreatmentsArr = selectedTreatmentQS ? selectedTreatmentQS.split(',').map(t => t.trim()).filter(Boolean) : [];
   const [foodsList, setFoodsList] = useState([]);
   const [productsList, setProductsList] = useState([]);
+  const [facilitiesList, setFacilitiesList] = useState([]);
 
   // Fetch all foods for name mapping
   useEffect(() => {
@@ -85,6 +88,13 @@ const BookingForm = () => {
     axios.get('/api/products')
       .then(res => setProductsList(Array.isArray(res.data) ? res.data : []))
       .catch(() => setProductsList([]));
+  }, []);
+
+  // Fetch all facilities for name mapping
+  useEffect(() => {
+    axios.get('/api/facilities')
+      .then(res => setFacilitiesList(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setFacilitiesList([]));
   }, []);
   // Removed duplicate declarations of query param variables
 
@@ -117,6 +127,7 @@ const [formData, setFormData] = useState({
     selectedTreatments: selectedTreatmentsArr,
     selectedFoods: selectedFoodsArr,
     selectedProducts: selectedProductsArr,
+    selectedFacilities: selectedFacilitiesArr,
     selectedDurations: selectedDurationsData,
     selectedDuration: '',
     selectedPrice: ''
@@ -133,6 +144,13 @@ const [formData, setFormData] = useState({
   useEffect(() => {
     if (selectedProductsArr.length > 0) {
       setFormData(prev => ({ ...prev, selectedProducts: selectedProductsArr }));
+    }
+  }, []);
+
+  // Pre-fill facilities on mount (if needed for future dynamic updates)
+  useEffect(() => {
+    if (selectedFacilitiesArr.length > 0) {
+      setFormData(prev => ({ ...prev, selectedFacilities: selectedFacilitiesArr }));
     }
   }, []);
 
@@ -209,6 +227,7 @@ const [showServiceDropdown, setShowServiceDropdown] = useState(false);
 const [showTreatmentDropdown, setShowTreatmentDropdown] = useState(false);
 const [showFoodDropdown, setShowFoodDropdown] = useState(false);
 const [showProductDropdown, setShowProductDropdown] = useState(false);
+const [showFacilityDropdown, setShowFacilityDropdown] = useState(false);
 
 
 
@@ -405,6 +424,7 @@ const handleSubmit = async (e) => {
     treatments,
     foodsList,
     productsList,
+    facilitiesList,
   };
 
   const pdfBlob = await generateAppointmentPDF(pdfData);
@@ -984,6 +1004,92 @@ const handleClearSignature = () => {
                             {product.price != null && (
                               <div className="text-sm text-gray-400">
                                 {product.price} {selectedLanguage === 'ar' ? 'ريال' : 'QR'}
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Facilities Selection Section */}
+                  <div className="mb-4">
+                    <h2 className="font-bold text-white text-lg mb-2 tracking-wide">{selectedLanguage === 'ar' ? 'المرافق' : 'Facilities'}</h2>
+
+                    {/* Show selected facilities or dropdown */}
+                    {formData.selectedFacilities && formData.selectedFacilities.length > 0 ? (
+                      <div>
+                        <div className="text-sm text-gray-300 mb-2">{selectedLanguage === 'ar' ? 'المرافق المختارة:' : 'Selected Facilities:'}</div>
+                        {formData.selectedFacilities.map((facilityId, idx) => {
+                          const selectedFacility = facilitiesList.find(facility => String(facility.id) === String(facilityId));
+                          return (
+                            <div key={facilityId + idx} className="mb-2 p-2 bg-zinc-800 rounded-lg border border-zinc-700 flex justify-between items-center">
+                              <span className="text-white font-medium">
+                                {selectedFacility ? (selectedLanguage === 'ar' ? (selectedFacility.name_ar || selectedFacility.name) : selectedFacility.name) : facilityId}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedFacilities: (prev.selectedFacilities || []).filter(id => String(id) !== String(facilityId))
+                                  }));
+                                }}
+                                className="text-red-400 hover:text-red-300 text-base font-bold px-2 py-1 cursor-pointer transition-colors"
+                                title={selectedLanguage === 'ar' ? 'إزالة' : 'Remove'}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          );
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => setShowFacilityDropdown(!showFacilityDropdown)}
+                          className="text-blue-400 hover:text-blue-300 text-sm mt-2"
+                        >
+                          + {selectedLanguage === 'ar' ? 'إضافة مرفق آخر' : 'Add Another Facility'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="text-sm text-gray-400 mb-2">{selectedLanguage === 'ar' ? 'اختر المرافق (اختياري):' : 'Select Facilities (Optional):'}</div>
+                        <button
+                          type="button"
+                          onClick={() => setShowFacilityDropdown(!showFacilityDropdown)}
+                          className="w-full bg-zinc-800 border border-zinc-700 p-3 rounded-lg text-white text-left hover:bg-zinc-700 transition"
+                        >
+                          {selectedLanguage === 'ar' ? 'اختر المرافق...' : 'Choose Facilities...'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Facility Dropdown */}
+                    {showFacilityDropdown && facilitiesList.length > 0 && (
+                      <div className="dropdown-container mt-2 bg-zinc-800 border border-zinc-600 rounded-lg max-h-48 overflow-y-auto">
+                        {facilitiesList.map(facility => (
+                          <button
+                            key={facility.id}
+                            type="button"
+                            onClick={() => {
+                              const facilityId = String(facility.id);
+                              if (!formData.selectedFacilities.includes(facilityId)) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  selectedFacilities: [...prev.selectedFacilities, facilityId]
+                                }));
+                              }
+                              setShowFacilityDropdown(false);
+                            }}
+                            className="w-full text-left p-3 hover:bg-zinc-700 transition text-white border-b border-zinc-700 last:border-b-0"
+                          >
+                            <div className="font-medium">
+                              {selectedLanguage === 'ar' ? (facility.name_ar || facility.name) : facility.name}
+                            </div>
+                            {facility.price != null && Number(facility.price) > 0 && (
+                              <div className="text-sm text-gray-400">
+                                {facility.price} {selectedLanguage === 'ar' ? 'ريال' : 'SAR'}
                               </div>
                             )}
                           </button>
