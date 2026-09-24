@@ -23,6 +23,7 @@ import FoodAdmin from "@pages/FoodAdmin";
 import Facility from "@pages/Facility";
 import Product from "@pages/Product";
 import ProductAdmin from "@pages/ProductAdmin";
+import FacilityAdmin from "@pages/FacilityAdmin";
 
 
 const Loadable = (Component) => (props) => {
@@ -55,6 +56,7 @@ export default function Router() {
     { path: "/users", element: <Users /> },
     { path: "/food-admin", element: <FoodAdmin /> },
     { path: "/product-admin", element: <ProductAdmin /> },
+    { path: "/facility-admin", element: <FacilityAdmin /> },
     { path: "/logout", element: <Logout /> },
     { path: "/404", element: <Page404 /> },
     { path: "*", element: <Navigate to="/404" replace /> },

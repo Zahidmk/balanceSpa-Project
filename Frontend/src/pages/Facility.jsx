@@ -1,15 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "../api/axios";
+import { getMediaUrl } from "../utils/media";
 
-// Add more entries here as more facility tours/media become available —
-// they lay out two per row automatically.
-const FACILITY_ITEMS = [
-  {
-    id: "main-tour",
-    title: { en: "Virtual Tour", ar: "جولة افتراضية" },
-    url: "https://my.matterport.com/show/?m=N7vsiehnUVx",
-  },
-];
+// Default virtual tour fallback if no 3D tours are provided
+const DEFAULT_TOUR = {
+  id: "main-tour",
+  name: "Virtual 360 Tour",
+  name_ar: "جولة افتراضية ٣٦٠",
+  url: "https://my.matterport.com/show/?m=N7vsiehnUVx",
+};
 
 const Facility = () => {
   const location = useLocation();
@@ -22,6 +22,23 @@ const Facility = () => {
   const durations = params.get("durations");
   const products = params.get("products");
 
+  const [facilities, setFacilities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const res = await axios.get("/api/facilities");
+        setFacilities(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Failed to load facilities:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFacilities();
+  }, []);
+
   const goToFood = () => {
     const query = new URLSearchParams({ lang });
     if (services) query.set("services", services);
@@ -31,83 +48,231 @@ const Facility = () => {
     navigate(`/food-beverages?${query.toString()}`);
   };
 
+  // Filter facilities that have showcase videos or 3D tour URLs
+  const videoFacilities = facilities.filter(
+    (f) => (f.video_url && f.video_url.trim()) || (f.tour_url && f.tour_url.trim())
+  );
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div
+      className={`min-h-screen bg-black text-white flex flex-col ${
+        lang === "ar" ? "rtl" : "ltr"
+      }`}
+      dir={lang === "ar" ? "rtl" : "ltr"}
+    >
       {/* Header */}
       <div className="py-4 px-6 border-b border-zinc-800 relative">
-        <h1 className="text-2xl font-bold text-center mb-2">
-          {lang === "ar" ? "المرفق" : "Facility"}
+        <h1 className="text-2xl font-bold text-center mb-1">
+          {lang === "ar" ? "المرفق والتجهيزات" : "Our Facilities"}
         </h1>
         <p className="text-sm text-gray-400 text-center">
-          {lang === "ar" ? "جولة افتراضية" : "Take a virtual tour"}
+          {lang === "ar"
+            ? "استكشف مرافق وتجهيزات سبا بالانس"
+            : "Explore Balance Spa rooms & amenities"}
         </p>
 
         {/* Back Button */}
-        <div className={`absolute top-8 ${lang === "ar" ? "right-8" : "left-8"}`}>
+        <div
+          className={`absolute top-6 ${
+            lang === "ar" ? "right-6 sm:right-8" : "left-6 sm:left-8"
+          }`}
+        >
           <button
             onClick={() => navigate(-1)}
-            className="text-white hover:text-blue-400 flex gap-1 items-center"
+            className="text-white hover:text-blue-400 flex gap-2 items-center text-sm font-medium"
           >
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               stroke="currentColor"
               strokeWidth="2"
               viewBox="0 0 24 24"
               className={lang === "ar" ? "rotate-180" : ""}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             <span>{lang === "ar" ? "الرجوع" : "Back"}</span>
           </button>
         </div>
       </div>
 
-      {/* Facility Items */}
-      <div className="flex-1 flex flex-col items-center p-6">
-        <div className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {FACILITY_ITEMS.map((item) => (
-            <div key={item.id} className="flex flex-col gap-2">
-              {item.title && (
-                <h2 className="text-lg font-semibold text-white">
-                  {lang === "ar" ? item.title.ar : item.title.en}
-                </h2>
-              )}
-              <div className="w-full aspect-video rounded-xl overflow-hidden shadow-lg">
-                {item.url ? (
-                  <iframe
-                    src={item.url}
-                    title={item.title ? item.title.en : "Facility"}
-                    className="w-full h-full border-0"
-                    allowFullScreen
-                    allow="xr-spatial-tracking"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-zinc-900 border border-zinc-800 text-gray-400 text-lg">
-                    {lang === "ar" ? "قريباً" : "Coming soon"}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center p-6 max-w-6xl mx-auto w-full">
+        {loading ? (
+          <div className="flex justify-center items-center py-24">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
+          </div>
+        ) : facilities.length === 0 ? (
+          /* Default fallback tour when no facilities exist yet */
+          <div className="w-full flex flex-col items-center mt-4">
+            <h2 className="text-xl font-bold text-white mb-4">
+              {lang === "ar" ? DEFAULT_TOUR.name_ar : DEFAULT_TOUR.name}
+            </h2>
+            <div className="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-zinc-800">
+              <iframe
+                src={DEFAULT_TOUR.url}
+                title="Virtual Tour"
+                className="w-full h-full border-0"
+                allowFullScreen
+                allow="xr-spatial-tracking"
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Section 1: Facility Room Cards */}
+            <div className="w-full">
+              <h2 className="text-xl font-bold text-white mb-6 border-b border-zinc-800 pb-3 flex items-center gap-2">
+                <span>{lang === "ar" ? "غرف ومرافق السبا" : "Spa Rooms & Suites"}</span>
+              </h2>
+
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+                {facilities.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl hover:border-zinc-700 transition-all duration-300 flex flex-col"
+                  >
+                    {/* Image / Media */}
+                    {item.image_url ? (
+                      <div className="w-full h-56 overflow-hidden bg-zinc-800">
+                        <img
+                          src={getMediaUrl(item.image_url)}
+                          alt={lang === "ar" ? item.name_ar || item.name : item.name}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-44 bg-zinc-800 flex items-center justify-center text-zinc-500 text-sm">
+                        {lang === "ar" ? "سبا بالانس" : "Balance Spa Facility"}
+                      </div>
+                    )}
+
+                    {/* Details */}
+                    <div className="p-6 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start gap-4 mb-2">
+                          <h3 className="text-xl font-bold text-white">
+                            {lang === "ar" ? item.name_ar || item.name : item.name}
+                          </h3>
+                          {item.price !== null && item.price !== undefined && (
+                            <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-sm font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                              {Number(item.price).toFixed(2)}{" "}
+                              {lang === "ar" ? "ريال" : "SAR"}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-gray-300 text-sm leading-relaxed mt-2">
+                          {lang === "ar"
+                            ? item.description_ar || item.description
+                            : item.description}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-10">
+            {/* Section 2: Room Video Tours & Virtual Showcase */}
+            <div className="w-full mt-16">
+              <div className="border-t border-zinc-800 pt-10 mb-8 text-center">
+                <h2 className="text-2xl font-bold text-white">
+                  {lang === "ar" ? "جولة في مرافقنا" : "Facility Video Tours"}
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  {lang === "ar"
+                    ? "شاهد جولات تفصيلية من داخل غرف ومرافق السبا"
+                    : "Take a closer look inside our luxury spa suites and facilities"}
+                </p>
+              </div>
+
+              {videoFacilities.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {videoFacilities.map((item) => (
+                    <div
+                      key={`tour-${item.id}`}
+                      className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+                    >
+                      <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                        <h3 className="text-lg font-semibold text-white">
+                          {lang === "ar" ? item.name_ar || item.name : item.name}
+                        </h3>
+                        <span className="text-xs text-blue-400 bg-blue-950/60 border border-blue-800 px-2.5 py-0.5 rounded-full">
+                          {item.video_url
+                            ? lang === "ar"
+                              ? "فيديو جولة"
+                              : "Room Tour"
+                            : lang === "ar"
+                            ? "جولة ٣٦٠"
+                            : "3D Virtual Tour"}
+                        </span>
+                      </div>
+
+                      <div className="w-full aspect-video bg-black relative">
+                        {item.video_url ? (
+                          <video
+                            src={getMediaUrl(item.video_url)}
+                            controls
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        ) : item.tour_url ? (
+                          <iframe
+                            src={item.tour_url}
+                            title={item.name}
+                            className="w-full h-full border-0"
+                            allowFullScreen
+                            allow="xr-spatial-tracking"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Fallback 3D tour if no facility-specific videos uploaded yet */
+                <div className="w-full flex flex-col items-center">
+                  <div className="w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-zinc-800">
+                    <iframe
+                      src={DEFAULT_TOUR.url}
+                      title="Virtual Tour"
+                      className="w-full h-full border-0"
+                      allowFullScreen
+                      allow="xr-spatial-tracking"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Continue Button */}
+        <div className="mt-14 mb-10">
           <button
             onClick={goToFood}
-            className="bg-white text-black px-8 py-3 rounded-full shadow hover:bg-gray-100 text-lg font-semibold flex items-center gap-2 border border-gray-300"
+            className="bg-white text-black px-10 py-3.5 rounded-full shadow hover:bg-gray-100 text-lg font-semibold flex items-center gap-3 border border-gray-300 transition-transform active:scale-95"
           >
-            {lang === "ar" ? "التالي" : "Continue"}
+            <span>{lang === "ar" ? "التالي" : "Continue"}</span>
             <svg
-              width="22"
-              height="22"
+              width="20"
+              height="20"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               viewBox="0 0 24 24"
               className={lang === "ar" ? "rotate-180" : ""}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>

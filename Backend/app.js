@@ -14,7 +14,7 @@ const app = express();
 
 // ✅ 1. CORS
 app.use(cors({
-  origin: ['https://balancespa.net', 'https://www.balancespa.net'],
+  origin: ['https://balancespa.net', 'https://www.balancespa.net', 'http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
 }));
 
@@ -30,6 +30,7 @@ import customerRoutes from './routes/customerRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import facilityRoutes from './routes/facilityRoutes.js';
 
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -39,6 +40,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/food-beverages', foodBeverageRoutes);
 app.use('/api/products', productRoutes); // ✅ this uses multer
+app.use('/api/facilities', facilityRoutes);
 
 // ✅ Static file serving
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
