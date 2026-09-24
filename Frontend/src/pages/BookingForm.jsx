@@ -456,12 +456,8 @@ const handleClearSignature = () => {
   
   const formOptions = {
     knowFrom: selectedLanguage === 'ar' ? 
-      ['صديق', 'الإنترنت', 'آخر'] : 
-      ['Friend', 'Online', 'Other'],
-    
-    socialMedia: selectedLanguage === 'ar' ? 
-      ['فيسبوك', 'سناب شات', 'إنستغرام', 'خرائط جوجل'] : 
-      ['Facebook', 'Snapchat', 'Instagram', 'Google Map'],
+      ['صديق', 'فيسبوك', 'سناب شات', 'إنستغرام', 'خرائط جوجل'] : 
+      ['Friend', 'Facebook', 'Snapchat', 'Instagram', 'Google Map'],
     
     healthConditions: selectedLanguage === 'ar' ? 
       [
@@ -1043,30 +1039,6 @@ const handleClearSignature = () => {
                             className="hidden"
                           />
                           {isChecked && <span className="text-xs"><svg width="14" height="14" fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <path d="M22 4 12 14.01l-3-3"></path>
-                          </svg></span>}
-                          {option}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="bg-zinc-900 p-6 border border-zinc-700 rounded-lg shadow-lg">
-                  <p className="font-semibold mb-4">{translations.labels.socialMedia}</p>
-                  <div className="flex flex-wrap gap-3">
-                    {formOptions.socialMedia.map(option => {
-                      const isChecked = formData.socialMedia.includes(option);
-                      return (
-                        <label key={option} className={checkboxClass(isChecked)}>
-                          <input
-                            type="checkbox"
-                            onChange={() => toggleCheckbox('socialMedia', option)}
-                            checked={isChecked}
-                            className="hidden"
-                          />
-                          {isChecked && <span className="text-lg"><svg width="14" height="14" fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                             <path d="M22 4 12 14.01l-3-3"></path>
                           </svg></span>}

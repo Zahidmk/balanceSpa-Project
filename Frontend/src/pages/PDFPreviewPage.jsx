@@ -209,21 +209,19 @@ const PDFPreviewPage = () => {
                 </div>
               </div>
 
-              {/* Social Media */}
-              <div className=" p-3 print:p-2 rounded print:rounded-none">
-                <h2 className="text-[14px] print:text-base font-semibold text-gray-800 mb-2 print:mb-1 border-b pb-1">Social Media</h2>
-                <div className="flex flex-wrap gap-2 text-sm print:text-xs">
-                  {Array.isArray(formData.socialMedia) && formData.socialMedia.length > 0 ? (
-                    formData.socialMedia.map((platform) => (
+              {/* Social Media (if present) */}
+              {Array.isArray(formData.socialMedia) && formData.socialMedia.length > 0 && (
+                <div className=" p-3 print:p-2 rounded print:rounded-none">
+                  <h2 className="text-[14px] print:text-base font-semibold text-gray-800 mb-2 print:mb-1 border-b pb-1">Social Media</h2>
+                  <div className="flex flex-wrap gap-2 text-sm print:text-xs">
+                    {formData.socialMedia.map((platform) => (
                       <span key={platform} className="text-xs font-medium flex items-center mb-1 mr-4">
                         <CheckBoxTick />{platform}
                       </span>
-                    ))
-                  ) : (
-                    <span className="text-gray-500 italic text-sm">No selection</span>
-                  )}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Health Information */}
               <div className=" p-3 print:p-2 rounded print:rounded-none">

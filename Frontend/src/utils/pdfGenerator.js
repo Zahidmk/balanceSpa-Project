@@ -276,8 +276,8 @@ export const generateAppointmentPDF = async (formData) => {
         <div class="selected-list">${selectedProductsNames.length ? selectedProductsNames.map(n => `<span>${n}</span>`).join('') : labels.notAvailable}</div>
         <div class="line"></div>
         <div class="section-title">${labels.knowAboutUs}</div>
-        <div class="label">${labels.source}</div><div class="value">${Array.isArray(formData.knowFrom) ? formData.knowFrom.join(', ') : labels.notAvailable}</div>
-        <div class="label">${labels.socialMedia}</div><div class="value">${Array.isArray(formData.socialMedia) ? formData.socialMedia.join(', ') : labels.notAvailable}</div>
+        <div class="label">${labels.source}</div><div class="value">${Array.isArray(formData.knowFrom) && formData.knowFrom.length ? formData.knowFrom.join(', ') : labels.notAvailable}</div>
+        ${Array.isArray(formData.socialMedia) && formData.socialMedia.length ? `<div class="label">${labels.socialMedia}</div><div class="value">${formData.socialMedia.join(', ')}</div>` : ''}
         <div class="line"></div>
         <div class="section-title">${labels.healthCondition}</div>
         <div class="label">${labels.healthConditions}</div><div class="value">${Array.isArray(formData.healthConditions) ? formData.healthConditions.join(', ') : labels.notAvailable}</div>
