@@ -319,7 +319,7 @@ const Facility = () => {
                           />
                         ) : item.tour_url ? (
                           <iframe
-                            src={item.tour_url}
+                            src={getMediaUrl(item.tour_url)}
                             title={item.name}
                             className="w-full h-full border-0"
                             allowFullScreen

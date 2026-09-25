@@ -1628,7 +1628,7 @@ const handleClearSignature = () => {
                   </p>
                 </div>
 
-                <div className="text-lg border border-zinc-700 p-3 mb-4 rounded bg-zinc-800">
+                <div className="text-sm border border-zinc-700 p-3 mb-4 rounded bg-zinc-800">
                   <strong className="text-red-500">
                     {selectedLanguage === 'ar' ? 'ملاحظة:' : 'NOTE:'}
                   </strong> 

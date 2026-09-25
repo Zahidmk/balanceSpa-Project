@@ -27,12 +27,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+  fileFilter: function (req, file, cb) {
+    if (file.fieldname === 'tour_file' && !/\.html?$/i.test(file.originalname)) {
+      return cb(new Error('Tour file must be an .html file'));
+    }
+    cb(null, true);
+  }
 });
 
 const cpUpload = upload.fields([
   { name: 'image', maxCount: 1 },
-  { name: 'video', maxCount: 1 }
+  { name: 'video', maxCount: 1 },
+  { name: 'tour_file', maxCount: 1 }
 ]);
 
 router.get('/', controller.getAll);

@@ -15,7 +15,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   UploadOutlined,
-  VideoCameraOutlined,
+  FileOutlined,
 } from "@ant-design/icons";
 import axios from "../api/axios";
 import { getMediaUrl } from "../utils/media";
@@ -29,9 +29,10 @@ const emptyForm = {
   tour_url: "",
   image: null,
   imageFile: null,
-  video: null,
-  videoFile: null,
+  tourFile: null,
 };
+
+const isUploadedTour = (url) => Boolean(url) && url.startsWith("/pdf-assets/");
 
 const FacilityAdmin = () => {
   const [items, setItems] = useState([]);
@@ -69,8 +70,7 @@ const FacilityAdmin = () => {
         tour_url: item.tour_url || "",
         image: item.image_url ? getMediaUrl(item.image_url, null) : null,
         imageFile: null,
-        video: item.video_url ? getMediaUrl(item.video_url, null) : null,
-        videoFile: null,
+        tourFile: null,
       });
     } else {
       setForm(emptyForm);
@@ -118,10 +118,8 @@ const FacilityAdmin = () => {
       formData.append("image_url", editingItem.image_url);
     }
 
-    if (form.videoFile) {
-      formData.append("video", form.videoFile);
-    } else if (editingItem && editingItem.video_url) {
-      formData.append("video_url", editingItem.video_url);
+    if (form.tourFile) {
+      formData.append("tour_file", form.tourFile);
     }
 
     try {
@@ -168,13 +166,6 @@ const FacilityAdmin = () => {
             />
           );
         }
-        if (record.video_url) {
-          return (
-            <div className="h-12 w-12 flex items-center justify-center bg-purple-100 text-purple-600 rounded-lg text-xs font-semibold">
-              <VideoCameraOutlined className="text-base" />
-            </div>
-          );
-        }
         return (
           <div className="h-12 w-12 flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg text-xs border">
             No media
@@ -215,31 +206,18 @@ const FacilityAdmin = () => {
       ),
     },
     {
-      title: "Tour Video",
-      dataIndex: "video_url",
-      width: 100,
-      render: (video_url) =>
-        video_url ? (
-          <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded font-medium border border-purple-200">
-            Uploaded
-          </span>
-        ) : (
-          <span className="text-gray-400 text-xs">—</span>
-        ),
-    },
-    {
       title: "3D Virtual Tour",
       dataIndex: "tour_url",
       width: 120,
       render: (url) =>
         url ? (
           <a
-            href={url}
+            href={getMediaUrl(url)}
             target="_blank"
             rel="noreferrer"
             className="text-xs text-blue-600 underline"
           >
-            View Link
+            {isUploadedTour(url) ? "View File" : "View Link"}
           </a>
         ) : (
           <span className="text-gray-400 text-xs">—</span>
@@ -276,7 +254,7 @@ const FacilityAdmin = () => {
         <div>
           <h2 className="text-2xl font-semibold">Facility Admin</h2>
           <p className="text-gray-500 text-sm mt-1">
-            Manage facility rooms, descriptions, pricing, tour videos, and 3D links.
+            Manage facility rooms, descriptions, pricing, and 3D tours.
           </p>
         </div>
         <Button
@@ -415,29 +393,39 @@ const FacilityAdmin = () => {
               )}
             </Form.Item>
 
-            <Form.Item label="Room Showcase Video (Optional)">
+            <Form.Item label="3D Tour HTML File (Optional)">
               <Upload
-                accept="video/mp4,video/webm,video/quicktime"
+                accept=".html,.htm,text/html"
                 showUploadList={false}
                 beforeUpload={(file) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    video: URL.createObjectURL(file),
-                    videoFile: file,
-                  }));
+                  if (!/\.html?$/i.test(file.name)) {
+                    message.error("Please select an .html file");
+                    return Upload.LIST_IGNORE;
+                  }
+                  setForm((prev) => ({ ...prev, tourFile: file }));
                   return false;
                 }}
               >
-                <Button icon={<VideoCameraOutlined />}>Upload Video</Button>
+                <Button icon={<FileOutlined />}>Upload HTML File</Button>
               </Upload>
-              {form.video && (
-                <div className="mt-2">
-                  <video
-                    src={form.video}
-                    controls
-                    className="h-20 w-32 object-cover rounded border bg-black"
-                  />
+              {form.tourFile ? (
+                <div className="mt-2 text-xs text-gray-600">
+                  Selected: <span className="font-medium">{form.tourFile.name}</span>
+                  <div className="text-gray-400">Replaces the tour URL when saved</div>
                 </div>
+              ) : (
+                isUploadedTour(form.tour_url) && (
+                  <div className="mt-2 text-xs">
+                    <a
+                      href={getMediaUrl(form.tour_url)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      View current tour file
+                    </a>
+                  </div>
+                )
               )}
             </Form.Item>
           </div>

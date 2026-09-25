@@ -26,6 +26,7 @@ const create = async (req, res) => {
     const { name, name_ar, description, description_ar, price, video_url, tour_url } = req.body;
     let image_url = null;
     let final_video_url = video_url || null;
+    let final_tour_url = tour_url || null;
 
     if (req.files) {
       if (req.files.image && req.files.image[0]) {
@@ -33,6 +34,9 @@ const create = async (req, res) => {
       }
       if (req.files.video && req.files.video[0]) {
         final_video_url = '/pdf-assets/' + req.files.video[0].filename;
+      }
+      if (req.files.tour_file && req.files.tour_file[0]) {
+        final_tour_url = '/pdf-assets/' + req.files.tour_file[0].filename;
       }
     } else if (req.file) {
       image_url = '/pdf-assets/' + req.file.filename;
@@ -50,7 +54,7 @@ const create = async (req, res) => {
       price: price !== undefined && price !== '' ? Number(price) : 0,
       image_url,
       video_url: final_video_url,
-      tour_url: tour_url || null,
+      tour_url: final_tour_url,
     };
     const [result] = await Facility.create(data);
     res.status(201).json({ message: 'Facility created', id: result.insertId });
@@ -65,6 +69,7 @@ const update = async (req, res) => {
     const { name, name_ar, description, description_ar, price, video_url, tour_url } = req.body;
     let image_url = req.body.image_url;
     let final_video_url = video_url !== undefined ? video_url : null;
+    let final_tour_url = tour_url !== undefined ? tour_url : null;
 
     if (req.files) {
       if (req.files.image && req.files.image[0]) {
@@ -72,6 +77,9 @@ const update = async (req, res) => {
       }
       if (req.files.video && req.files.video[0]) {
         final_video_url = '/pdf-assets/' + req.files.video[0].filename;
+      }
+      if (req.files.tour_file && req.files.tour_file[0]) {
+        final_tour_url = '/pdf-assets/' + req.files.tour_file[0].filename;
       }
     } else if (req.file) {
       image_url = '/pdf-assets/' + req.file.filename;
@@ -85,7 +93,7 @@ const update = async (req, res) => {
       price: price !== undefined && price !== '' ? Number(price) : 0,
       image_url: image_url || null,
       video_url: final_video_url,
-      tour_url: tour_url !== undefined ? tour_url : null,
+      tour_url: final_tour_url,
     };
     await Facility.update(req.params.id, data);
     res.json({ message: 'Facility updated' });
