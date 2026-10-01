@@ -408,7 +408,7 @@ const PDFPreviewPage = () => {
 
               <div className="text-sm  p-3 mb-4" style={{ color: '#18181b', }}>
                 {formData.language === 'ar'
-                  ? 'لقد قرأت الموقع أدناه وفهمت المحتويات والشروط المذكورة أعلاه. أوافق على أن المنتجع الصحي غير مسؤول عن أي حالة ناتجة عن العلاج.'
+                  ? 'أقرّ أنا الموقّع أدناه بأنني قرأتُ وفهمتُ المحتويات والشروط الواردة أعلاه، وأقرّ بأن المعلومات التي قدّمتها صحيحة ودقيقة، وأدرك أهمية إبلاغ الموظفين بأي حالات طبية أو مخاوف صحية. يحتفظ المنتجع الصحي بالحق في رفض تقديم العلاج. وأوافق على أن المنتجع الصحي، وكذلك موظفيه وإدارته، غير مسؤولين عن تفاقم أي حالات صحية قائمة نتيجة للعلاج الذي أتلقاه. وأقرّ بأنني أخضع لهذا العلاج بمحض إرادتي.'
                   : 'The undersigned has read and understood the above contents and terms. The undersigned represent that the information provided is true and accurate and understands the importance of alerting the staff to any medical conditions or concern. The spa reserves the right to refuse treatment. I agree that either the spa, not its employee or management shall be liable or responsible for aggravation of any existing conditions as a result of my treatment. I am voluntarily undertaking this treatment.'}
               </div>
 
