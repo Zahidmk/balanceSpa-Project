@@ -90,7 +90,10 @@ const Product = () => {
   const [categories, setCategories] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("all");
+  // "selected" = show the categories chosen on the previous step (grouped), "all" = everything
+  const [activeCategory, setActiveCategory] = useState(
+    selectedServices.length > 0 ? "selected" : "all"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -107,14 +110,6 @@ const Product = () => {
         setCategories(catData);
         setAllProducts(prodData);
 
-        // If the user arrived with specific services selected from previous step,
-        // pre-activate the first selected service category
-        if (selectedServices.length > 0) {
-          const matched = catData.find((c) => String(c.id) === selectedServices[0]);
-          if (matched) {
-            setActiveCategory(String(matched.id));
-          }
-        }
       } catch (err) {
         console.error("Failed to load products:", err);
       } finally {
@@ -131,25 +126,41 @@ const Product = () => {
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [categories, allProducts]);
 
-  // Filtered products based on active category pill + search input
-  const displayedProducts = useMemo(() => {
-    return allProducts.filter((product) => {
-      const matchCategory =
-        activeCategory === "all" || String(product.category_id) === String(activeCategory);
+  // Products filtered by search, grouped by category (selected categories first, in selection order)
+  const groupedProducts = useMemo(() => {
+    let categoryIds;
+    if (activeCategory === "selected") {
+      categoryIds = selectedServices;
+    } else if (activeCategory === "all") {
+      categoryIds = availableCategories.map((c) => String(c.id));
+    } else {
+      categoryIds = [String(activeCategory)];
+    }
 
+    const matchesSearch = (product) => {
       const name = (lang === "ar" ? product.name_ar : product.name_en) || product.name_en || "";
       const desc =
         (lang === "ar" ? product.description_ar : product.description_en) ||
         product.description_en ||
         "";
-      const matchSearch =
-        !searchQuery.trim() ||
-        name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        desc.toLowerCase().includes(searchQuery.toLowerCase());
+      const q = searchQuery.trim().toLowerCase();
+      return !q || name.toLowerCase().includes(q) || desc.toLowerCase().includes(q);
+    };
 
-      return matchCategory && matchSearch;
-    });
-  }, [allProducts, activeCategory, searchQuery, lang]);
+    return categoryIds
+      .map((id) => ({
+        category: categories.find((c) => String(c.id) === String(id)),
+        products: allProducts.filter(
+          (p) => String(p.category_id) === String(id) && matchesSearch(p)
+        ),
+      }))
+      .filter((g) => g.category && g.products.length > 0);
+  }, [allProducts, categories, availableCategories, activeCategory, searchQuery, lang, servicesParam]);
+
+  const displayedProducts = useMemo(
+    () => groupedProducts.flatMap((g) => g.products),
+    [groupedProducts]
+  );
 
   const toggleProduct = (id) => {
     setSelectedProducts((prev) =>
@@ -236,6 +247,20 @@ const Product = () => {
 
       {/* Category Filter Pills (Exact Match to Brochure Page) */}
       <div className="overflow-x-auto whitespace-nowrap px-6 py-3.5 bg-[#121212] border-b border-zinc-800 flex items-center gap-2 hide-scrollbar">
+        {/* Selected services pill (returns to grouped view of chosen categories) */}
+        {selectedServices.length > 0 && (
+          <button
+            onClick={() => setActiveCategory("selected")}
+            className={`inline-block px-5 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 ${
+              activeCategory === "selected"
+                ? "bg-white text-black shadow-md font-semibold"
+                : "bg-zinc-800 text-white hover:bg-zinc-700"
+            }`}
+          >
+            {lang === "ar" ? "اختياراتك" : "Your Selection"}
+          </button>
+        )}
+
         {/* All Products pill */}
         <button
           onClick={() => setActiveCategory("all")}
@@ -250,15 +275,20 @@ const Product = () => {
 
         {/* Dynamic Category Pills */}
         {availableCategories.map((cat) => {
-          const isActive = activeCategory === String(cat.id);
           const isUserSelectedService = selectedServices.includes(String(cat.id));
+          // Every chosen service tab is active while the grouped selection view is shown
+          const isActive =
+            activeCategory === String(cat.id) ||
+            (activeCategory === "selected" && isUserSelectedService);
 
           return (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(String(cat.id))}
               className={`inline-block px-5 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 ${
-                isActive
+                isActive && activeCategory === "selected"
+                  ? "bg-blue-600 text-white border-2 border-blue-400 shadow-lg"
+                  : isActive
                   ? "bg-white text-black shadow-md font-semibold"
                   : isUserSelectedService
                   ? "bg-blue-900/60 border border-blue-500 text-blue-200 hover:bg-blue-800/70"
@@ -323,17 +353,35 @@ const Product = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
-            {displayedProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                lang={lang}
-                isSelected={selectedProducts.includes(product.id)}
-                onToggle={() => toggleProduct(product.id)}
-              />
+          <>
+            {groupedProducts.map(({ category, products }) => (
+              <div key={category.id} className="mb-12">
+                {groupedProducts.length > 1 && (
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-white mb-2 border-b-2 border-blue-500 pb-2 inline-block">
+                      {lang === "ar" ? category.name_ar : category.name_en}
+                    </h3>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {lang === "ar"
+                        ? `${products.length} منتج متاح`
+                        : `${products.length} product${products.length === 1 ? "" : "s"} available`}
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      lang={lang}
+                      isSelected={selectedProducts.includes(product.id)}
+                      onToggle={() => toggleProduct(product.id)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
-          </div>
+          </>
         )}
 
         {/* Bottom Continue Button */}
