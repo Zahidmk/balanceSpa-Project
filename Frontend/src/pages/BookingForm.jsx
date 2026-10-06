@@ -856,8 +856,8 @@ const handleClearSignature = () => {
   
   const formOptions = {
     knowFrom: selectedLanguage === 'ar' ? 
-      ['صديق', 'فيسبوك', 'سناب شات', 'إنستغرام', 'خرائط جوجل'] : 
-      ['Friend', 'Facebook', 'Snapchat', 'Instagram', 'Google Map'],
+      ['صديق', 'فيسبوك', 'سناب شات', 'إنستغرام', 'أخرى'] : 
+      ['Friend', 'Facebook', 'Snapchat', 'Instagram', 'Others'],
     
     healthConditions: selectedLanguage === 'ar' ? 
       [
