@@ -255,8 +255,8 @@ export const generateAppointmentPDF = async (formData) => {
       .notes { margin-top:0; color:#b91c1c; font-weight:bold; text-align:left; }
       .terms { margin-top:0; color:#444; font-size:14px; text-align:left; line-height:1.7; }
       .selected-list { margin:4px 0 16px 0; }
-      .selected-list span { display:block; border-left:3px solid #9ca3af; padding:3px 0 3px 10px; margin:0 0 6px 0; color:#222; font-size:14px; font-weight:500; line-height:1.5; }
-      .selected-parts-list .chip { display:inline-block; border-left:3px solid #9ca3af; padding:3px 12px 3px 8px; margin:0 8px 6px 0; color:#222; font-size:14px; font-weight:500; line-height:1.5; }
+      .selected-list span { display:block; padding:2px 0; margin:0 0 6px 0; color:#222; font-size:14px; font-weight:500; line-height:1.5; }
+      .selected-parts-list .chip { display:inline-block; padding:2px 0; margin:0 8px 6px 0; color:#222; font-size:14px; font-weight:500; line-height:1.5; }
     </style>
     <div class="pdf-header">
       <img src="${logo}" class="pdf-logo" alt="BALANCE SPA Logo" />
@@ -270,15 +270,15 @@ export const generateAppointmentPDF = async (formData) => {
         <div class="label">${labels.phone}</div><div class="value">${formData.mobile || labels.notAvailable}</div>
         <div class="label">${labels.nationality}</div><div class="value">${formData.nationality || labels.notAvailable}</div>
         <div class="label">${labels.selectedServices}</div>
-        <div class="selected-list">${selectedServicesNames.length ? selectedServicesNames.map(n => `<span>${n}</span>`).join('') : labels.notAvailable}</div>
+        <div class="selected-list">${selectedServicesNames.length ? selectedServicesNames.map(n => `<span>&#8226; ${n}</span>`).join('') : labels.notAvailable}</div>
         <div class="label">${labels.selectedTreatments}</div>
-        <div class="selected-list">${selectedTreatmentsWithDuration.length ? selectedTreatmentsWithDuration.map(n => `<span>${n}</span>`).join('') : labels.notAvailable}</div>
+        <div class="selected-list">${selectedTreatmentsWithDuration.length ? selectedTreatmentsWithDuration.map(n => `<span>&#8226; ${n}</span>`).join('') : labels.notAvailable}</div>
         <div class="label">${labels.selectedFoods}</div>
-        <div class="selected-list">${selectedFoodsNames.length ? selectedFoodsNames.map(n => `<span>${n}</span>`).join('') : labels.notAvailable}</div>
+        <div class="selected-list">${selectedFoodsNames.length ? selectedFoodsNames.map(n => `<span>&#8226; ${n}</span>`).join('') : labels.notAvailable}</div>
         <div class="label">${labels.selectedProducts}</div>
-        <div class="selected-list">${selectedProductsNames.length ? selectedProductsNames.map(n => `<span>${n}</span>`).join('') : labels.notAvailable}</div>
+        <div class="selected-list">${selectedProductsNames.length ? selectedProductsNames.map(n => `<span>&#8226; ${n}</span>`).join('') : labels.notAvailable}</div>
         <div class="label">${labels.selectedFacilities}</div>
-        <div class="selected-list">${selectedFacilitiesNames.length ? selectedFacilitiesNames.map(n => `<span>${n}</span>`).join('') : labels.notAvailable}</div>
+        <div class="selected-list">${selectedFacilitiesNames.length ? selectedFacilitiesNames.map(n => `<span>&#8226; ${n}</span>`).join('') : labels.notAvailable}</div>
         <div class="line"></div>
         <div class="section-title">${labels.knowAboutUs}</div>
         <div class="label">${labels.source}</div><div class="value">${Array.isArray(formData.knowFrom) && formData.knowFrom.length ? formData.knowFrom.join(', ') : labels.notAvailable}</div>
@@ -299,7 +299,7 @@ export const generateAppointmentPDF = async (formData) => {
           ${renderBodySVG('back', selectedBack)}
         </div>
         <div class="selected-parts-list">
-          ${getSelectedPartLabels(formData.selectedBodyParts, formData.language).map(label => `<span class="chip">${label}</span>`).join('')}
+          ${getSelectedPartLabels(formData.selectedBodyParts, formData.language).map(label => `<span class="chip">&#8226; ${label}</span>`).join('')}
         </div>
         <div class="line"></div>
         <div class="section-title">${labels.skinType}</div>
