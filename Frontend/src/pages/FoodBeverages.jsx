@@ -194,7 +194,7 @@ const FoodBeverages = () => {
           <div className="col-span-full text-center text-gray-400 text-lg">{lang === 'ar' ? 'لا توجد أطعمة أو مشروبات متاحة.' : 'No food or beverages available.'}</div>
         ) : (
           items.map((item) => (
-            <div key={item.id} className="bg-white text-black rounded-2xl shadow-xl p-6 w-full max-w-xs flex flex-col items-center transition-transform hover:scale-105">
+            <div key={item.id} onClick={() => handleSelect(item.id)} className={`bg-white text-black rounded-2xl shadow-xl p-6 w-full max-w-xs flex flex-col items-center transition-transform hover:scale-105 cursor-pointer ${selectedItems.includes(item.id) ? "ring-4 ring-purple-600" : ""}`}>
               <img
                 src={getMediaUrl(item.image_url, 'https://via.placeholder.com/100x100?text=No+Image')}
                 alt={lang === 'ar' ? item.name_ar : item.name}
@@ -204,7 +204,7 @@ const FoodBeverages = () => {
               <div className="text-gray-700 text-base mb-2 text-center">
                 {lang === 'ar' ? item.description_ar : item.description}
               </div>
-              <label className="flex items-center gap-2 mt-4">
+              <label className="flex items-center gap-2 mt-4" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="checkbox"
                   checked={selectedItems.includes(item.id)}
