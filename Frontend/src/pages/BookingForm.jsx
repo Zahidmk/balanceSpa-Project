@@ -11,9 +11,29 @@ import axios from '../api/axios';
 import { getMediaUrl } from '../utils/media';
 
 // ─── Treatment Browser Modal ──────────────────────────────────────────────────
-function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreatments, selectedTreatments, onSelectTreatment, onRemoveTreatment, selectedDurations, onDurationSelect }) {
+function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreatments, selectedTreatments, onSelectTreatment, onRemoveTreatment, selectedDurations, onDurationSelect, extras = {}, onConfirm }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [expandedTreatment, setExpandedTreatment] = useState(null);
+  const [step, setStep] = useState(0);
+  const STEPS = ['treatments', 'food', 'products', 'facilities', 'review'];
+  const stepKey = STEPS[step];
+  const ar = language === 'ar';
+  const stepLabels = {
+    treatments: ar ? 'العلاجات' : 'Treatments',
+    food: ar ? 'الأطعمة والمشروبات' : 'Food & Beverages',
+    products: ar ? 'المنتجات' : 'Products',
+    facilities: ar ? 'المرافق' : 'Facilities',
+    review: ar ? 'المراجعة' : 'Review',
+  };
+
+  useEffect(() => { if (isOpen) setStep(0); }, [isOpen]);
+
+  const itemInfo = (kind, it) => ({
+    name: kind === 'products' ? (ar ? it.name_ar : it.name_en) : (ar ? (it.name_ar || it.name) : it.name),
+    desc: kind === 'products' ? (ar ? it.description_ar : it.description_en) : (ar ? (it.description_ar || it.description) : it.description),
+    price: it.price,
+    img: it.image_url,
+  });
 
   useEffect(() => {
     if (isOpen && categories.length > 0 && !activeCategory) {
@@ -61,8 +81,22 @@ function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreat
           </button>
         </div>
 
+        {/* Step Tabs */}
+        <div className="flex gap-2 px-6 py-3 overflow-x-auto border-b border-zinc-800 shrink-0">
+          {STEPS.map((k, i) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setStep(i)}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition ${i === step ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-gray-300 hover:bg-zinc-700'}`}
+            >
+              {i + 1}. {stepLabels[k]}
+            </button>
+          ))}
+        </div>
+
         {/* Category Tabs */}
-        {categories.length > 0 && (
+        {stepKey === 'treatments' && categories.length > 0 && (
           <div className="flex gap-2 px-6 py-3 overflow-x-auto border-b border-zinc-800 shrink-0">
             <button
               onClick={() => setActiveCategory(null)}
@@ -83,7 +117,7 @@ function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreat
         )}
 
         {/* Treatments Grid */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className={stepKey === 'treatments' ? 'flex-1 overflow-y-auto p-6' : 'hidden'}>
           {visibleTreatments.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
               {language === 'ar' ? 'لا توجد علاجات متاحة' : 'No treatments available'}
@@ -184,20 +218,112 @@ function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreat
           )}
         </div>
 
-        {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-zinc-700 shrink-0 flex items-center justify-between bg-zinc-900/80">
-          <div className="text-sm text-gray-400">
-            {selectedTreatments.length > 0
-              ? `${selectedTreatments.length} ${language === 'ar' ? 'علاج مختار' : 'treatment(s) selected'}`
-              : (language === 'ar' ? 'لم يتم اختيار علاجات بعد' : 'No treatments selected yet')}
+        {/* Food / Products / Facilities picker */}
+        {['food', 'products', 'facilities'].includes(stepKey) && (() => {
+          const ex = extras[stepKey] || { list: [], selected: [], toggle: () => {} };
+          return (
+            <div className="flex-1 overflow-y-auto p-6">
+              {ex.list.length === 0 ? (
+                <div className="text-center py-16 text-gray-500">{ar ? 'لا توجد عناصر متاحة' : 'No items available'}</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {ex.list.map(it => {
+                    const id = String(it.id);
+                    const isSel = ex.selected.map(String).includes(id);
+                    const info = itemInfo(stepKey, it);
+                    return (
+                      <div key={id} className={`rounded-xl border overflow-hidden bg-zinc-800 transition ${isSel ? 'border-emerald-500 ring-1 ring-emerald-500/40' : 'border-zinc-700 hover:border-zinc-500'}`}>
+                        {info.img ? (
+                          <img src={getMediaUrl(info.img)} alt={info.name} className="w-full h-40 object-cover" onError={e => { e.target.style.display = 'none'; }} />
+                        ) : (
+                          <div className="w-full h-40 bg-zinc-700 flex items-center justify-center text-zinc-500 text-sm">{ar ? 'سبا بالانس' : 'Balance Spa'}</div>
+                        )}
+                        <div className="p-4">
+                          <h3 className="font-bold text-white text-base mb-1">{info.name}</h3>
+                          {info.desc && <p className="text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2">{info.desc}</p>}
+                          {info.price != null && Number(info.price) > 0 && (
+                            <div className="text-xs text-gray-300 mb-3">{info.price} {ar ? 'ريال' : 'QR'}</div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => ex.toggle(id)}
+                            className={`w-full py-2 rounded-lg text-sm font-semibold transition ${isSel ? 'bg-red-900/50 hover:bg-red-900/80 text-red-300 border border-red-700' : 'bg-white hover:bg-gray-100 text-black'}`}
+                          >
+                            {isSel ? (ar ? 'إزالة' : 'Remove') : (ar ? 'إضافة إلى الحجز' : 'Add to Booking')}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Review & Confirm */}
+        {stepKey === 'review' && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {[
+              { key: 'treatments', idx: 0, items: allTreatments.filter(t => selectedTreatments.map(String).includes(String(t.id))).map(t => ({
+                id: t.id,
+                label: `${ar ? t.name_ar : t.name_en}${selectedDurations[String(t.id)] ? ` — ${selectedDurations[String(t.id)].duration} (${selectedDurations[String(t.id)].price} ${ar ? 'ريال' : 'SAR'})` : ''}`,
+                remove: () => onRemoveTreatment(String(t.id)),
+              })) },
+              ...['food', 'products', 'facilities'].map((k, i) => {
+                const ex = extras[k] || { list: [], selected: [], toggle: () => {} };
+                return { key: k, idx: i + 1, items: ex.list.filter(it => ex.selected.map(String).includes(String(it.id))).map(it => ({
+                  id: it.id, label: itemInfo(k, it).name, remove: () => ex.toggle(String(it.id)),
+                })) };
+              }),
+            ].map(sec => (
+              <div key={sec.key} className="bg-zinc-800 border border-zinc-700 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-white">{stepLabels[sec.key]}</h3>
+                  <button type="button" onClick={() => setStep(sec.idx)} className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold">
+                    {ar ? 'تغيير' : 'Change'}
+                  </button>
+                </div>
+                {sec.items.length === 0 ? (
+                  <div className="text-sm text-gray-500">{ar ? 'لا شيء محدد' : 'None selected'}</div>
+                ) : sec.items.map(it => (
+                  <div key={it.id} className="flex items-center justify-between py-1.5 text-sm text-gray-200">
+                    <span>{it.label}</span>
+                    <button type="button" onClick={it.remove} className="text-red-400 hover:text-red-300 text-xs">{ar ? 'إزالة' : 'Remove'}</button>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-white text-black px-6 py-2 rounded-full font-semibold text-sm hover:bg-gray-100 transition"
-          >
-            {language === 'ar' ? 'تم' : 'Done'}
-          </button>
+        )}
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-zinc-700 shrink-0 flex items-center justify-between bg-zinc-900/80 gap-3">
+          <div className="text-sm text-gray-400">
+            {stepKey === 'treatments'
+              ? (selectedTreatments.length > 0
+                  ? `${selectedTreatments.length} ${ar ? 'علاج مختار' : 'treatment(s) selected'}`
+                  : (ar ? 'لم يتم اختيار علاجات بعد' : 'No treatments selected yet'))
+              : stepKey !== 'review'
+                ? `${(extras[stepKey]?.selected || []).length} ${ar ? 'محدد' : 'selected'}`
+                : ''}
+          </div>
+          <div className="flex gap-2">
+            {step > 0 && (
+              <button type="button" onClick={() => setStep(step - 1)} className="bg-zinc-800 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-zinc-700 transition">
+                {ar ? 'السابق' : 'Back'}
+              </button>
+            )}
+            {step < STEPS.length - 1 ? (
+              <button type="button" onClick={() => setStep(step + 1)} className="bg-white text-black px-6 py-2 rounded-full font-semibold text-sm hover:bg-gray-100 transition">
+                {ar ? 'التالي' : 'Next'}
+              </button>
+            ) : (
+              <button type="button" onClick={() => { if (onConfirm) onConfirm(); onClose(); }} className="bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold text-sm hover:bg-emerald-500 transition">
+                {ar ? 'تأكيد' : 'Confirm'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -602,6 +728,13 @@ useEffect(() => {
     });
   };
 
+  const toggleExtra = (key, id) => {
+    setFormData(prev => {
+      const list = (prev[key] || []).map(String);
+      return { ...prev, [key]: list.includes(id) ? list.filter(x => x !== id) : [...list, id] };
+    });
+  };
+
   const handleModalRemoveTreatment = (tid) => {
     setFormData(prev => {
       const updatedTreatments = (prev.selectedTreatments || []).filter(id => String(id) !== String(tid));
@@ -763,6 +896,11 @@ const handleClearSignature = () => {
         onSelectTreatment={handleModalSelectTreatment}
         onRemoveTreatment={handleModalRemoveTreatment}
         onDurationSelect={(tid, dur, price) => handleDurationSelect(tid, dur, price)}
+        extras={{
+          food: { list: foodsList, selected: formData.selectedFoods || [], toggle: (id) => toggleExtra('selectedFoods', id) },
+          products: { list: productsList, selected: formData.selectedProducts || [], toggle: (id) => toggleExtra('selectedProducts', id) },
+          facilities: { list: facilitiesList, selected: formData.selectedFacilities || [], toggle: (id) => toggleExtra('selectedFacilities', id) },
+        }}
       />
 
       <div className="bg-black py-4 px-6 border-b border-zinc-800 re">
@@ -782,7 +920,7 @@ const handleClearSignature = () => {
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
             </svg>
-            {selectedLanguage === 'ar' ? 'استكشف العلاجات' : 'Browse Treatments'}
+            {selectedLanguage === 'ar' ? 'استكشف واختر' : 'Browse & Select'}
           </button>
         </div>
               {/* Back Button */}
