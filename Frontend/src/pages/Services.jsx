@@ -125,7 +125,7 @@ const Services = () => {
         ) : (
           <div>
             <div
-              className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-y-auto max-h-[calc(100vh-215px)] px-2 hide-scrollbar"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-y-auto max-h-[calc(100vh-180px)] px-2 hide-scrollbar"
               dir={selectedLanguage === 'ar' ? 'rtl' : 'ltr'}
             >
               {categories
