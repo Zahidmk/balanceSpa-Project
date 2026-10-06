@@ -72,6 +72,22 @@ const BrochureDisplay = () => {
       return;
     }
 
+    // Every selected category must have at least one treatment selected
+    const selectedCategoryIds = new Set(
+      selectedTreatments.map(tid => String(allTreatments.find(t => String(t.id) === String(tid))?.category_id))
+    );
+    const missingCategories = selectedServices.filter(sid => !selectedCategoryIds.has(String(sid)));
+    if (missingCategories.length > 0) {
+      const names = missingCategories.map(sid => {
+        const cat = categories.find(c => String(c.id) === String(sid));
+        return cat ? (selectedLanguage === 'ar' ? cat.name_ar : cat.name_en) : sid;
+      }).join(', ');
+      alert(selectedLanguage === 'ar'
+        ? `لم يتم اختيار علاج للفئات التالية: ${names}. يرجى اختيار علاج من كل فئة محددة.`
+        : `No treatment selected for: ${names}. Please select a treatment from each selected category.`);
+      return;
+    }
+
     // Format duration data for URL
     const durationsParam = selectedTreatments.map(treatmentId => {
       const duration = selectedDurations[treatmentId];
