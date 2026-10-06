@@ -251,11 +251,11 @@ export const generateAppointmentPDF = async (formData) => {
       .value { margin-bottom: 12px; color: #222; }
       .line { height: 1px; background: #eee; margin: 16px 0; }
       .body-images { display: flex; gap: 32px; justify-content: center; align-items: flex-start; margin-bottom: 8px; }
-      .selected-parts-list { color:#222; padding:8px 0 0 0; border-radius:8px; margin-bottom:8px; font-size:14px; }
+      .selected-parts-list { display:flex; flex-wrap:wrap; gap:8px; color:#222; padding:8px 0 0 0; border-radius:8px; margin-bottom:8px; font-size:14px; }
       .notes { margin-top:0; color:#b91c1c; font-weight:bold; text-align:left; }
       .terms { margin-top:0; color:#444; font-size:14px; text-align:left; line-height:1.7; }
-      .selected-list { margin-bottom: 12px; }
-      .selected-list span { display:inline-block; background:#f3f4f6; color:#222; padding:4px 12px; border-radius:12px; margin-right:6px; font-size:14px; font-weight:500; }
+      .selected-list { display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 18px 0; align-items:center; }
+      .selected-list span, .chip { display:inline-flex; align-items:center; box-sizing:border-box; min-height:32px; line-height:20px; background:#f3f4f6; border:1px solid #e5e7eb; color:#222; padding:6px 14px; border-radius:16px; font-size:14px; font-weight:500; white-space:nowrap; }
     </style>
     <div class="pdf-header">
       <img src="${logo}" class="pdf-logo" alt="BALANCE SPA Logo" />
@@ -298,7 +298,7 @@ export const generateAppointmentPDF = async (formData) => {
           ${renderBodySVG('back', selectedBack)}
         </div>
         <div class="selected-parts-list">
-          ${getSelectedPartLabels(formData.selectedBodyParts, formData.language).map(label => `<span style="color:#222;padding:4px 10px;border-radius:12px;margin-right:4px;display:inline-block;background:#f3f4f6;">${label}</span>`).join('')}
+          ${getSelectedPartLabels(formData.selectedBodyParts, formData.language).map(label => `<span class="chip">${label}</span>`).join('')}
         </div>
         <div class="line"></div>
         <div class="section-title">${labels.skinType}</div>
