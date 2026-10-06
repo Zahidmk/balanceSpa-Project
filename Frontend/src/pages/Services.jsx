@@ -119,13 +119,13 @@ const Services = () => {
       </div>
 
       {/* Service Categories */}
-      <div className="p-6 flex flex-col h-screen overflow-hidden">
+      <div className="px-6 pt-3 pb-2 flex flex-col h-screen overflow-hidden">
         {loading ? (
           <p className="text-center text-gray-400">Loading services...</p>
         ) : (
           <div>
             <div
-              className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-y-auto max-h-[calc(100vh-280px)] px-2 hide-scrollbar"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-5 overflow-y-auto max-h-[calc(100vh-215px)] px-2 hide-scrollbar"
               dir={selectedLanguage === 'ar' ? 'rtl' : 'ltr'}
             >
               {categories
@@ -189,10 +189,10 @@ const Services = () => {
                   </div>
                 ))}
             </div>
-            <div className="flex justify-center mt-8">
+            <div className="flex justify-center mt-3">
               <button
                 onClick={handleShowTreatments}
-                className="bg-white text-black px-8 py-3 rounded-full shadow hover:bg-gray-100 text-lg font-semibold flex items-center gap-2 border border-gray-300"
+                className="bg-white text-black px-8 py-2 rounded-full shadow hover:bg-gray-100 text-lg font-semibold flex items-center gap-2 border border-gray-300"
               >
                 {selectedLanguage === 'ar' ? 'عرض العلاجات' : 'Show Treatments'}
                 <svg
