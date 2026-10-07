@@ -15,7 +15,7 @@ function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreat
   const [activeCategory, setActiveCategory] = useState(null);
   const [expandedTreatment, setExpandedTreatment] = useState(null);
   const [step, setStep] = useState(0);
-  const STEPS = ['treatments', 'food', 'products', 'facilities', 'review'];
+  const STEPS = ['treatments', 'products', 'facilities', 'food', 'review'];
   const stepKey = STEPS[step];
   const ar = language === 'ar';
   const stepLabels = {
@@ -270,7 +270,7 @@ function TreatmentBrowserModal({ isOpen, onClose, language, categories, allTreat
                 label: `${ar ? t.name_ar : t.name_en}${selectedDurations[String(t.id)] ? ` — ${selectedDurations[String(t.id)].duration} (${selectedDurations[String(t.id)].price} ${ar ? 'ريال' : 'SAR'})` : ''}`,
                 remove: () => onRemoveTreatment(String(t.id)),
               })) },
-              ...['food', 'products', 'facilities'].map((k, i) => {
+              ...['products', 'facilities', 'food'].map((k, i) => {
                 const ex = extras[k] || { list: [], selected: [], toggle: () => {} };
                 return { key: k, idx: i + 1, items: ex.list.filter(it => ex.selected.map(String).includes(String(it.id))).map(it => ({
                   id: it.id, label: itemInfo(k, it).name, remove: () => ex.toggle(String(it.id)),
