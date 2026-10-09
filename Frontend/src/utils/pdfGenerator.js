@@ -211,6 +211,27 @@ export const generateAppointmentPDF = async (formData) => {
     notAvailable: formData.language === 'ar' ? 'غير متوفر' : 'N/A'
   };
 
+  const isAr = formData.language === 'ar';
+  const policy = isAr ? {
+    title: 'سياسة العلاج',
+    intro: 'لضمان تجربة آمنة ومريحة ومهنية لجميع ضيوفنا، يرجى التكرم بالالتزام بسياسات السبا التالية:',
+    items: [
+      ['الحدود المهنية:', 'يقدم معالجونا علاجات صحية مهنية فقط. التدليك أو العلاجات الأخرى التي تشمل المناطق الخاصة أو الحساسة غير مسموح بها بتاتاً.'],
+      ['إلغاء العلاج:', 'إذا كنت ترغب في إلغاء العلاج أو التوقف عنه، يرجى إبلاغ المعالج أو فريق الاستقبال خلال أول 15 دقيقة من بدء الجلسة.'],
+      ['عدم استرداد المبلغ بعد انتصاف الوقت:', 'إذا تم إنجاز أكثر من 50% من وقت العلاج المحدد، نعتذر عن عدم إمكانية استرداد المبلغ المدفوع.']
+    ],
+    outro: 'نقدر تفهمكم وتعاونكم في مساعدتنا على الحفاظ على بيئة محترمة وآمنة ومريحة للجميع. شكراً لاختياركم منتجعنا الصحي، ونتطلع إلى تقديم تجربة ممتعة ومريحة لكم.'
+  } : {
+    title: 'Treatment Policy',
+    intro: 'To ensure a safe, comfortable, and professional experience for all our guests, we kindly ask you to observe the following spa policies:',
+    items: [
+      ['Professional Boundaries:', 'Our therapists provide professional wellness treatments only. Massage or other treatments involving private or intimate areas are strictly not permitted.'],
+      ['Treatment Cancellation:', 'If you wish to cancel or discontinue your treatment, please inform our therapist or reception team within the first 15 minutes of the treatment.'],
+      ['No Refund After Halfway Point:', 'If more than 50% of the scheduled treatment time has already been completed, we regret that we are unable to provide a refund.']
+    ],
+    outro: 'We appreciate your understanding and cooperation in helping us maintain a respectful, safe, and relaxing environment for everyone. Thank you for choosing our spa. We look forward to providing you with a pleasant and relaxing wellness experience.'
+  };
+
   container.innerHTML = `
     <style>
       .pdf-header {
@@ -310,6 +331,11 @@ export const generateAppointmentPDF = async (formData) => {
         <div class="value">
           ${formData.signature ? `<img src="${formData.signature}" style="width:150px;height:60px;border-radius:6px;border:1px solid #ccc;object-fit:contain;" />` : (formData.language === 'ar' ? 'لم يتم تقديم توقيع' : 'No signature provided')}
         </div>
+        <div class="line"></div>
+        <div class="section-title">${policy.title}</div>
+        <div style="font-size:13px; color:#444; line-height:1.6; margin-bottom:10px; text-align:${isAr ? 'right' : 'left'};">${policy.intro}</div>
+        ${policy.items.map(([h, t]) => `<div style="font-size:13px; color:#222; line-height:1.6; margin-bottom:8px; text-align:${isAr ? 'right' : 'left'};">&#8226; <b>${h}</b> ${t}</div>`).join('')}
+        <div style="font-size:12px; color:#666; font-style:italic; line-height:1.6; margin-top:10px; text-align:${isAr ? 'right' : 'left'};">${policy.outro}</div>
         <div style="margin-top:32px; text-align:${formData.language === 'ar' ? 'right' : 'left'};">
           <div class="notes" style="color:#b91c1c; font-weight:bold; text-align:${formData.language === 'ar' ? 'right' : 'left'}; font-size:15px; margin-bottom:8px;">${formData.language === 'ar' ? 'ملاحظات: السلوك الجنسي محظور قانونًا ولن تتسامح معه الإدارة والسلطة.' : 'Notes: Sexual behavior is prohibited by law and will not be tolerated by the management and the Authority.'}</div>
           <div class="terms" style="color:#444; font-size:14px; text-align:${formData.language === 'ar' ? 'right' : 'left'}; line-height:1.7; max-width:600px; margin-${formData.language === 'ar' ? 'right' : 'left'}:0;">${formData.language === 'ar' ? 'أقرّ أنا الموقّع أدناه بأنني قرأتُ وفهمتُ المحتويات والشروط الواردة أعلاه، وأقرّ بأن المعلومات التي قدّمتها صحيحة ودقيقة، وأدرك أهمية إبلاغ الموظفين بأي حالات طبية أو مخاوف صحية. يحتفظ المنتجع الصحي بالحق في رفض تقديم العلاج. وأوافق على أن المنتجع الصحي، وكذلك موظفيه وإدارته، غير مسؤولين عن تفاقم أي حالات صحية قائمة نتيجة للعلاج الذي أتلقاه. وأقرّ بأنني أخضع لهذا العلاج بمحض إرادتي.' : 'The undersigned has read and understood the above contents and terms. The undersigned represent that the information provided is true and accurate and understands the importance of alerting the staff to any medical conditions or concern. The spa reserves the right to refuse treatment. I agree that either the spa, not its employee or management shall be liable or responsible for aggravation of any existing conditions as a result of my treatment. I am voluntarily undertaking this treatment.'}</div>
@@ -328,13 +354,15 @@ export const generateAppointmentPDF = async (formData) => {
 
   // Compress PNG dataURL
   const imgData = canvas.toDataURL("image/jpeg", 0.7); // use JPEG and lower quality
+  // Keep the aspect ratio so extra content grows the page instead of being squashed
+  const pageHeight = Math.max(1600, Math.round(1100 * canvas.height / canvas.width));
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "px",
-    format: [1100, 1600]
+    format: [1100, pageHeight]
   });
 
-  pdf.addImage(imgData, "JPEG", 0, 0, 1100, 1600, undefined, 'FAST');
+  pdf.addImage(imgData, "JPEG", 0, 0, 1100, pageHeight, undefined, 'FAST');
   document.body.removeChild(container);
 
   return pdf.output("blob");
